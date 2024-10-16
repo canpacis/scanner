@@ -86,4 +86,4 @@ s := scanner.NewPipeScanner(
 s.Scan(p) // Don't forget to handle errors
 ```
 
-This will populate your structs fields with available values.
+This will populate your struct's fields with available values.
