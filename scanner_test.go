@@ -43,7 +43,7 @@ type Params struct {
 
 	Token string `cookie:"token"`
 
-	Document multipart.File `file:"document"`
+	Document multipart.File `multipart:"document"`
 
 	Avatar image.Image `image:"avatar"`
 }

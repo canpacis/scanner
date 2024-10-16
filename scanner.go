@@ -178,7 +178,7 @@ type Multipart struct {
 
 // Scans the multipart form data onto v
 func (s *Multipart) Scan(v any) error {
-	return structd.New(s.v, "file").Decode(v)
+	return structd.New(s.v, "multipart").Decode(v)
 }
 
 func NewMultipart(v *MultipartValues) *Multipart {
