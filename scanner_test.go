@@ -46,6 +46,8 @@ type Params struct {
 	Document multipart.File `multipart:"document"`
 
 	Avatar image.Image `image:"avatar"`
+
+	LocalFile string `file:"local.txt"`
 }
 
 type Expectation struct {
@@ -227,6 +229,27 @@ func TestImageScanner(t *testing.T) {
 		Expectations: func(p *Params) []Expectation {
 			return []Expectation{
 				{hash(img), hash(p.Avatar)},
+			}
+		},
+	}
+	c.Run(t)
+}
+
+func TestDirectoryScanner(t *testing.T) {
+	fsys := FS{
+		Files: map[string]*File{
+			"local.txt": NewFile("local.txt", []byte("mock file")),
+		},
+	}
+
+	s, err := scanner.NewDirectory(fsys)
+	assert.NoError(t, err)
+
+	c := Case{
+		Scanner: s,
+		Expectations: func(p *Params) []Expectation {
+			return []Expectation{
+				{"mock file", p.LocalFile},
 			}
 		},
 	}

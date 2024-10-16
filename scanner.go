@@ -3,11 +3,14 @@ package scanner
 import (
 	"bytes"
 	"encoding/json"
+	"errors"
 	"image"
 	"io"
+	"io/fs"
 	"mime/multipart"
 	"net/http"
 	"net/url"
+	"path/filepath"
 	"reflect"
 
 	"github.com/CanPacis/scanner/structd"
@@ -38,6 +41,55 @@ func NewJSONBytes(b []byte) *JSON {
 	return &JSON{
 		r: bytes.NewBuffer(b),
 	}
+}
+
+// A scanner to scan os file's content to a struct
+type Directory struct {
+	files map[string]io.Reader
+}
+
+func (s *Directory) Get(key string) any {
+	file, ok := s.files[key]
+	if !ok {
+		return []byte{}
+	}
+
+	b, _ := io.ReadAll(file)
+	return b
+}
+
+func (s *Directory) Cast(from any, to reflect.Type) (any, error) {
+	if to.Kind() == reflect.String {
+		rt := reflect.TypeOf(from)
+		if rt.Kind() == reflect.Slice && rt.Elem().Kind() == reflect.Uint8 {
+			b := from.([]byte)
+			return string(b), nil
+		}
+	}
+
+	return nil, errors.ErrUnsupported
+}
+
+func (s *Directory) Scan(v any) error {
+	return structd.New(s, "file").Decode(v)
+}
+
+func NewDirectory(fsys fs.FS) (*Directory, error) {
+	entries, err := fs.ReadDir(fsys, ".")
+	if err != nil {
+		return nil, err
+	}
+
+	files := map[string]io.Reader{}
+	for _, entry := range entries {
+		file, err := fsys.Open(filepath.Join(".", entry.Name()))
+		if err != nil {
+			return nil, err
+		}
+		files[entry.Name()] = file
+	}
+
+	return &Directory{files: files}, nil
 }
 
 // A scanner to scan header values from an `http.Header` to a struct
