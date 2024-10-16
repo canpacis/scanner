@@ -74,7 +74,7 @@ func TestJsonScanner(t *testing.T) {
 	body := bytes.NewBuffer([]byte(`{ "email": "test@example.com", "name": "John Doe" }`))
 
 	c := Case{
-		Scanner: scanner.NewJsonScanner(body),
+		Scanner: scanner.NewJSON(body),
 		Expectations: func(p *Params) []Expectation {
 			return []Expectation{
 				{"test@example.com", p.Email},
@@ -90,7 +90,7 @@ func TestHeaderScanner(t *testing.T) {
 	header.Set("Accept-Language", "en")
 
 	c := Case{
-		Scanner: scanner.NewHeaderScanner(header),
+		Scanner: scanner.NewHeader(header),
 		Expectations: func(p *Params) []Expectation {
 			return []Expectation{
 				{"en", p.Language},
@@ -108,7 +108,7 @@ func TestQueryScanner(t *testing.T) {
 	values.Set("roles", "admin,user")
 
 	c := Case{
-		Scanner: scanner.NewQueryScanner(values),
+		Scanner: scanner.NewQuery(values),
 		Expectations: func(p *Params) []Expectation {
 			return []Expectation{
 				{uint32(2), p.Page},
@@ -129,7 +129,7 @@ func TestFormScanner(t *testing.T) {
 	form.Set("numbers", "6,7,8")
 
 	c := Case{
-		Scanner: scanner.NewFormScanner(form),
+		Scanner: scanner.NewForm(form),
 		Expectations: func(p *Params) []Expectation {
 			return []Expectation{
 				{2, len(p.Filters)},
@@ -156,7 +156,7 @@ func TestCookieScanner(t *testing.T) {
 	})
 
 	c := Case{
-		Scanner: scanner.NewCookieScanner(jar, url),
+		Scanner: scanner.NewCookie(jar, url),
 		Expectations: func(p *Params) []Expectation {
 			return []Expectation{
 				{"cookie-token", p.Token},
@@ -183,7 +183,7 @@ func TestMultipartScanner(t *testing.T) {
 	}
 
 	c := Case{
-		Scanner: scanner.NewMultipartScanner(multipart),
+		Scanner: scanner.NewMultipart(multipart),
 		Expectations: func(p *Params) []Expectation {
 			file, err := io.ReadAll(p.Document)
 
@@ -223,7 +223,7 @@ func TestImageScanner(t *testing.T) {
 	}
 
 	c := Case{
-		Scanner: scanner.NewImageScanner(multipart),
+		Scanner: scanner.NewImage(multipart),
 		Expectations: func(p *Params) []Expectation {
 			return []Expectation{
 				{hash(img), hash(p.Avatar)},

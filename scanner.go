@@ -1,6 +1,7 @@
 package scanner
 
 import (
+	"bytes"
 	"encoding/json"
 	"image"
 	"io"
@@ -18,21 +19,28 @@ type Scanner interface {
 }
 
 // A scanner to scan json value from an `io.Reader` to a struct
-type JsonScanner struct {
+type JSON struct {
 	r io.Reader
 }
 
 // Scans the json onto v
-func (s *JsonScanner) Scan(v any) error {
+func (s *JSON) Scan(v any) error {
 	return json.NewDecoder(s.r).Decode(v)
 }
 
-func NewJsonScanner(r io.Reader) *JsonScanner {
-	return &JsonScanner{
+func NewJSON(r io.Reader) *JSON {
+	return &JSON{
 		r: r,
 	}
 }
 
+func NewJSONBytes(b []byte) *JSON {
+	return &JSON{
+		r: bytes.NewBuffer(b),
+	}
+}
+
+// A scanner to scan header values from an `http.Header` to a struct
 type Header struct {
 	*http.Header
 }
@@ -41,56 +49,48 @@ func (h *Header) Get(key string) any {
 	return h.Header.Get(key)
 }
 
-// A scanner to scan header values from an `http.Header` to a struct
-type HeaderScanner struct {
-	h Header
-}
-
 // Scans the headers onto v
-func (s *HeaderScanner) Scan(v any) error {
-	return structd.New(&s.h, "header").Decode(v)
+func (s *Header) Scan(v any) error {
+	return structd.New(s, "header").Decode(v)
 }
 
-func NewHeaderScanner(h *http.Header) *HeaderScanner {
-	return &HeaderScanner{
-		h: Header{h},
+func NewHeader(h *http.Header) *Header {
+	return &Header{
+		Header: h,
 	}
-}
-
-type QueryValues struct {
-	*url.Values
-}
-
-func (v QueryValues) Get(key string) any {
-	return v.Values.Get(key)
-}
-
-func (v QueryValues) Cast(from any, to reflect.Type) (any, error) {
-	return structd.DefaultCast(from, to)
 }
 
 // A scanner to scan url query values from a `*url.Values` to a struct
-type QueryScanner struct {
-	q QueryValues
+type Query struct {
+	*url.Values
+}
+
+func (v Query) Get(key string) any {
+	return v.Values.Get(key)
+}
+
+func (v Query) Cast(from any, to reflect.Type) (any, error) {
+	return structd.DefaultCast(from, to)
 }
 
 // Scans the query values onto v
-func (s *QueryScanner) Scan(v any) error {
-	return structd.New(s.q, "query").Decode(v)
+func (s *Query) Scan(v any) error {
+	return structd.New(s, "query").Decode(v)
 }
 
-func NewQueryScanner(v *url.Values) *QueryScanner {
-	return &QueryScanner{
-		q: QueryValues{v},
+func NewQuery(v *url.Values) *Query {
+	return &Query{
+		Values: v,
 	}
 }
 
-type CookieValues struct {
+// A scanner to scan http cookies for a url from a `http.CookieJar` to a struct
+type Cookie struct {
 	http.CookieJar
 	url *url.URL
 }
 
-func (v CookieValues) Get(key string) any {
+func (v Cookie) Get(key string) any {
 	list := v.Cookies(v.url)
 	for _, cookie := range list {
 		if cookie.Name == key {
@@ -101,35 +101,39 @@ func (v CookieValues) Get(key string) any {
 	return nil
 }
 
-// A scanner to scan http cookies for a url from a `http.CookieJar` to a struct
-type CookieScanner struct {
-	c CookieValues
-}
-
 // Scans the cookie values onto v
-func (s *CookieScanner) Scan(v any) error {
-	return structd.New(s.c, "cookie").Decode(v)
+func (s *Cookie) Scan(v any) error {
+	return structd.New(s, "cookie").Decode(v)
 }
 
-func NewCookieScanner(jar http.CookieJar, url *url.URL) *CookieScanner {
-	return &CookieScanner{
-		c: CookieValues{jar, url},
+func NewCookie(jar http.CookieJar, url *url.URL) *Cookie {
+	return &Cookie{
+		CookieJar: jar,
+		url:       url,
 	}
 }
 
 // A scanner to scan form values from a `*url.Values` to a struct
-type FormScanner struct {
-	f QueryValues
+type Form struct {
+	*url.Values
+}
+
+func (v Form) Get(key string) any {
+	return v.Values.Get(key)
+}
+
+func (v Form) Cast(from any, to reflect.Type) (any, error) {
+	return structd.DefaultCast(from, to)
 }
 
 // Scans the form data onto v
-func (s *FormScanner) Scan(v any) error {
-	return structd.New(s.f, "form").Decode(v)
+func (s *Form) Scan(v any) error {
+	return structd.New(s, "form").Decode(v)
 }
 
-func NewFormScanner(v *url.Values) *FormScanner {
-	return &FormScanner{
-		f: QueryValues{v},
+func NewForm(v *url.Values) *Form {
+	return &Form{
+		Values: v,
 	}
 }
 
@@ -168,56 +172,50 @@ func MultipartValuesFromParser(p MultipartParser, size int64, names ...string) (
 
 // A scanner to scan multipart form values, files, from a `*scanner.MultipartValues` to a struct
 // You can create a `*scanner.MultipartValues` instance with the `scanner.MultipartValuesFromParser` function.
-type MultipartScanner struct {
+type Multipart struct {
 	v *MultipartValues
 }
 
 // Scans the multipart form data onto v
-func (s *MultipartScanner) Scan(v any) error {
+func (s *Multipart) Scan(v any) error {
 	return structd.New(s.v, "file").Decode(v)
 }
 
-func NewMultipartScanner(v *MultipartValues) *MultipartScanner {
-	return &MultipartScanner{
+func NewMultipart(v *MultipartValues) *Multipart {
+	return &Multipart{
 		v: v,
 	}
 }
 
-type ImageValues struct {
-	mv *MultipartValues
+type Image struct {
+	Files map[string]multipart.File
 }
 
-func (v ImageValues) Get(key string) any {
-	file := v.mv.Get(key)
-	if file == nil {
+func (v Image) Get(key string) any {
+	file, ok := v.Files[key]
+	if !ok {
 		return nil
 	}
 
-	mfile := file.(multipart.File)
-	img, _, _ := image.Decode(mfile)
-
+	img, _, _ := image.Decode(file)
 	return img
 }
 
-type ImageScanner struct {
-	v *ImageValues
-}
-
 // Scans the multipart form data and turns them into image.Image and sets v
-func (s *ImageScanner) Scan(v any) error {
-	return structd.New(s.v, "image").Decode(v)
+func (s *Image) Scan(v any) error {
+	return structd.New(s, "image").Decode(v)
 }
 
-func NewImageScanner(v *MultipartValues) *ImageScanner {
-	return &ImageScanner{
-		v: &ImageValues{mv: v},
+func NewImage(v *MultipartValues) *Image {
+	return &Image{
+		Files: v.Files,
 	}
 }
 
-type PipeScanner []Scanner
+type Pipe []Scanner
 
-// Runs provided scanners in sequence
-func (s *PipeScanner) Scan(v any) error {
+// Runs given scanners in sequence
+func (s *Pipe) Scan(v any) error {
 	value := v
 
 	for _, scanner := range *s {
@@ -229,7 +227,7 @@ func (s *PipeScanner) Scan(v any) error {
 	return nil
 }
 
-func NewPipeScanner(scanners ...Scanner) *PipeScanner {
-	s := PipeScanner(scanners)
+func NewPipe(scanners ...Scanner) *Pipe {
+	s := Pipe(scanners)
 	return &s
 }
