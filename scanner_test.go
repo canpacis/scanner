@@ -174,7 +174,7 @@ type file struct {
 }
 
 func TestMultipartScanner(t *testing.T) {
-	multipart := scanner.MultipartValues{
+	multipart := &scanner.MultipartValues{
 		Files: map[string]multipart.File{
 			"document": file{
 				Reader: bytes.NewBuffer([]byte("text document")),
@@ -214,7 +214,7 @@ func TestImageScanner(t *testing.T) {
 	img := image.NewNRGBA(image.Rect(0, 0, 100, 100))
 	png.Encode(buf, img)
 
-	multipart := scanner.MultipartValues{
+	multipart := &scanner.MultipartValues{
 		Files: map[string]multipart.File{
 			"avatar": file{
 				Reader: buf,
