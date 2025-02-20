@@ -13,7 +13,7 @@ import (
 	"path/filepath"
 	"reflect"
 
-	"github.com/CanPacis/scanner/structd"
+	"github.com/canpacis/scanner/structd"
 )
 
 // Scanner interface resembles a json parser, it populates the given struct with available values based on its field tags. It should return an error when v is not a struct.

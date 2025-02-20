@@ -1,4 +1,4 @@
-module github.com/CanPacis/scanner
+module github.com/canpacis/scanner
 
 go 1.23.0
 

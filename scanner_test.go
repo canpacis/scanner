@@ -14,7 +14,7 @@ import (
 	"net/url"
 	"testing"
 
-	"github.com/CanPacis/scanner"
+	"github.com/canpacis/scanner"
 	"github.com/stretchr/testify/assert"
 )
 
