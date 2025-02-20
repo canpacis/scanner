@@ -189,6 +189,30 @@ func NewForm(v *url.Values) *Form {
 	}
 }
 
+// A scanner to scan path parameters from a `*http.Request` to a struct
+type Path struct {
+	*http.Request
+}
+
+func (v Path) Get(key string) any {
+	return v.PathValue(key)
+}
+
+func (v Path) Cast(from any, to reflect.Type) (any, error) {
+	return structd.DefaultCast(from, to)
+}
+
+// Scans the path parameters onto v
+func (s *Path) Scan(v any) error {
+	return structd.New(s, "path").Decode(v)
+}
+
+func NewPath(req *http.Request) *Path {
+	return &Path{
+		Request: req,
+	}
+}
+
 type MultipartValues struct {
 	Files map[string]multipart.File
 }

@@ -48,6 +48,9 @@ type Params struct {
 	Avatar image.Image `image:"avatar"`
 
 	LocalFile string `file:"local.txt"`
+
+	ID   string `path:"id"`
+	Slug string `path:"slug"`
 }
 
 type Expectation struct {
@@ -141,6 +144,23 @@ func TestFormScanner(t *testing.T) {
 				{6, p.Numbers[0]},
 				{7, p.Numbers[1]},
 				{8, p.Numbers[2]},
+			}
+		},
+	}
+	c.Run(t)
+}
+
+func TestPathScanner(t *testing.T) {
+	req := &http.Request{}
+	req.SetPathValue("id", "this_is_id")
+	req.SetPathValue("slug", "this-is-slug")
+
+	c := Case{
+		Scanner: scanner.NewPath(req),
+		Expectations: func(p *Params) []Expectation {
+			return []Expectation{
+				{"this_is_id", p.ID},
+				{"this-is-slug", p.Slug},
 			}
 		},
 	}
