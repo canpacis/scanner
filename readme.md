@@ -1,3 +1,9 @@
+# Install
+
+```shell
+go get github.com/canpacis/scanner
+```
+
 # Scanner
 
 Scanner is a utility package to extract certain values and cast them to usable values in the context of http servers. It can extract request bodies, form values, url queries, cookies and headers. Scanner defines a `Scanner` interface for you to extend it to your own needs.
