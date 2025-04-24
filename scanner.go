@@ -138,13 +138,11 @@ func NewQuery(v *url.Values) *Query {
 
 // A scanner to scan http cookies for a url from a `http.CookieJar` to a struct
 type Cookie struct {
-	http.CookieJar
-	url *url.URL
+	cookies []*http.Cookie
 }
 
 func (v Cookie) Get(key string) any {
-	list := v.Cookies(v.url)
-	for _, cookie := range list {
+	for _, cookie := range v.cookies {
 		if cookie.Name == key {
 			return cookie.Value
 		}
@@ -158,10 +156,9 @@ func (s *Cookie) Scan(v any) error {
 	return structd.New(s, "cookie").Decode(v)
 }
 
-func NewCookie(jar http.CookieJar, url *url.URL) *Cookie {
+func NewCookie(cookies []*http.Cookie) *Cookie {
 	return &Cookie{
-		CookieJar: jar,
-		url:       url,
+		cookies: cookies,
 	}
 }
 

@@ -178,7 +178,7 @@ func TestCookieScanner(t *testing.T) {
 	})
 
 	c := Case{
-		Scanner: scanner.NewCookie(jar, url),
+		Scanner: scanner.NewCookie(jar.Cookies(url)),
 		Expectations: func(p *Params) []Expectation {
 			return []Expectation{
 				{"cookie-token", p.Token},
