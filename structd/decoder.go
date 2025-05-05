@@ -6,8 +6,6 @@ import (
 	"reflect"
 	"strconv"
 	"strings"
-
-	"golang.org/x/exp/constraints"
 )
 
 type Getter interface {
@@ -89,7 +87,7 @@ func (d *Decoder) Decode(v any) error {
 }
 
 type numbers interface {
-	constraints.Integer | constraints.Float
+	int | int8 | int16 | int32 | int64 | uint | uint8 | uint16 | uint32 | uint64 | float32 | float64
 }
 
 func parse[T numbers](s string) (T, error) {
